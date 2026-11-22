@@ -36,6 +36,18 @@ impl From<TrackingUniverseOrigin> for u32{
         }
     }
 }
+impl From<sys::ETrackingUniverseOrigin> for TrackingUniverseOrigin {
+    fn from(value: sys::ETrackingUniverseOrigin) -> Self {
+        match value {
+            sys::ETrackingUniverseOrigin_TrackingUniverseSeated => TrackingUniverseOrigin::Seated,
+            sys::ETrackingUniverseOrigin_TrackingUniverseStanding => TrackingUniverseOrigin::Standing,
+            sys::ETrackingUniverseOrigin_TrackingUniverseRawAndUncalibrated => {
+                TrackingUniverseOrigin::RawAndUncalibrated
+            }
+            _ => panic!("unrecognized tracking universe origin"),
+        }
+    }
+}
 #[repr(C)]
 #[derive(Default, Debug, Copy, Clone)]
 pub struct TrackedDevicePose(pub sys::TrackedDevicePose_t);

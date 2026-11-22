@@ -18,6 +18,7 @@ mod init_error;
 pub mod property;
 pub mod render_models;
 pub mod system;
+pub mod tracked_camera;
 
 pub use init_error::InitError;
 pub use tracking::*;
@@ -79,6 +80,7 @@ pub struct Chaperone(&'static sys::VR_IVRChaperone_FnTable);
 pub struct Input(&'static sys::VR_IVRInput_FnTable);
 pub struct Settings(&'static sys::VR_IVRSettings_FnTable);
 pub struct Overlay(&'static sys::VR_IVROverlay_FnTable);
+pub struct TrackedCamera(&'static sys::VR_IVRTrackedCamera_FnTable);
 
 /// Entry points into OpenVR.
 ///
@@ -124,6 +126,9 @@ impl Context {
     }
     pub fn overlay(&self) -> Result<Overlay, InitError> {
         load(sys::IVROverlay_Version).map(|x| unsafe { Overlay(&*x) })
+    }
+    pub fn tracked_camera(&self) -> Result<TrackedCamera, InitError> {
+        load(sys::IVRTrackedCamera_Version).map(|x| unsafe { TrackedCamera(&*x) })
     }
 }
 

@@ -11,7 +11,7 @@ impl RenderModels {
     ///
     /// The method returns `Ok(None)` while the render model is still being loaded. Call it at regular intervals until
     /// it returns `Ok(Some(model))`.
-    pub fn load_render_model(&self, name: &CStr) -> Result<Option<Model>> {
+    pub fn load_render_model(&self, name: &CStr) -> Result<Option<Model<'_>>> {
         let mut ptr = ptr::null_mut();
         let r = unsafe { self.0.LoadRenderModel_Async.unwrap()(name.as_ptr() as *mut _, &mut ptr) };
         match Error(r) {
@@ -115,7 +115,7 @@ impl RenderModels {
     ///
     /// The method returns `Ok(None)` while the texture is still being loaded. Call it at regular intervals until it
     /// returns `Ok(Some(texture))`.
-    pub fn load_texture(&self, id: TextureId) -> Result<Option<Texture>> {
+    pub fn load_texture(&self, id: TextureId) -> Result<Option<Texture<'_>>> {
         let mut ptr = ptr::null_mut();
         let r = unsafe { self.0.LoadTexture_Async.unwrap()(id.0, &mut ptr) };
         match Error(r) {

@@ -362,6 +362,53 @@ impl System {
         }
     }
 
+    pub fn array_tracked_device_property<T: ArrayPropType>(
+        &self,
+        device: TrackedDeviceIndex,
+        property: TrackedDeviceProperty,
+    ) -> Result<Box<[T]>, TrackedPropertyError> {
+        let mut error: mem::MaybeUninit<TrackedPropertyError> = mem::MaybeUninit::uninit();
+
+        let size = unsafe {
+            self.0.GetArrayTrackedDeviceProperty.unwrap()(
+                device.0,
+                property.0,
+                T::TAG,
+                ptr::null_mut(),
+                0,
+                error.as_mut_ptr() as *mut sys::TrackedPropertyError,
+            )
+        };
+
+        let error = unsafe { error.assume_init() };
+        if error != tracked_property_error::SUCCESS {
+            return Err(error);
+        }
+        
+        let elem_count = (size as usize).div_ceil(size_of::<T>());
+        let mut result = vec![T::default(); elem_count];
+        let mut error: mem::MaybeUninit<TrackedPropertyError> = mem::MaybeUninit::uninit();
+        
+        unsafe {
+            self.0.GetArrayTrackedDeviceProperty.unwrap()(
+                device.0,
+                property.0,
+                T::TAG,
+                result.as_mut_ptr() as *mut _,
+                (result.len() * size_of::<T>()) as u32,
+                error.as_mut_ptr() as *mut sys::TrackedPropertyError,
+            )
+        };
+        
+        let error = unsafe { error.assume_init() };
+        
+        if error == tracked_property_error::SUCCESS {
+            Ok(result.into_boxed_slice())
+        } else {
+            Err(error)
+        }
+    }
+
     pub fn string_tracked_device_property(
         &self,
         device: TrackedDeviceIndex,
@@ -396,7 +443,7 @@ impl System {
     /// Passing `HiddenAreaMeshType::Inverse` will produce the visible area mesh that is commonly used in place of
     /// full-screen quads. The visible area mesh covers all of the pixels the hidden area mesh does not cover.
     // TODO: Handle line loops with a separate method and return type, since HiddenAreaMesh assumes triangles.
-    pub fn hidden_area_mesh(&self, eye: Eye, ty: HiddenAreaMeshType) -> Option<HiddenAreaMesh> {
+    pub fn hidden_area_mesh(&self, eye: Eye, ty: HiddenAreaMeshType) -> Option<HiddenAreaMesh<'_>> {
         let mesh = unsafe {
             self.0.GetHiddenAreaMesh.unwrap()(eye as sys::EVREye, ty as sys::EHiddenAreaMeshType)
         };
@@ -709,3 +756,20 @@ impl From<core::ffi::c_int> for DeviceActivityLevel {
         }
     }
 }
+
+pub trait ArrayPropType: Default + Clone {
+    const TAG: sys::PropertyTypeTag_t;
+}
+
+impl ArrayPropType for f32  { const TAG: sys::PropertyTypeTag_t = sys::k_unFloatPropertyTag; }
+impl ArrayPropType for i32  { const TAG: sys::PropertyTypeTag_t = sys::k_unInt32PropertyTag; }
+impl ArrayPropType for u32  { const TAG: sys::PropertyTypeTag_t = sys::k_unUint64PropertyTag; }
+impl ArrayPropType for bool { const TAG: sys::PropertyTypeTag_t = sys::k_unBoolPropertyTag; }
+impl ArrayPropType for f64  { const TAG: sys::PropertyTypeTag_t = sys::k_unDoublePropertyTag; }
+
+impl ArrayPropType for [[f32; 4]; 3] { const TAG: sys::PropertyTypeTag_t = sys::k_unHmdMatrix34PropertyTag; }
+impl ArrayPropType for [[f32; 4]; 4] { const TAG: sys::PropertyTypeTag_t = sys::k_unHmdMatrix44PropertyTag; }
+impl ArrayPropType for [f32; 3]      { const TAG: sys::PropertyTypeTag_t = sys::k_unHmdVector3PropertyTag; }
+impl ArrayPropType for [f32; 4]      { const TAG: sys::PropertyTypeTag_t = sys::k_unHmdVector4PropertyTag; }
+impl ArrayPropType for [f32; 2]      { const TAG: sys::PropertyTypeTag_t = sys::k_unHmdVector2PropertyTag; }
+impl ArrayPropType for [[f32; 3]; 4] { const TAG: sys::PropertyTypeTag_t = sys::k_unHmdQuadPropertyTag; }

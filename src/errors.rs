@@ -292,3 +292,100 @@ impl VROverlayError {
         }
     }
 }
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+pub enum VRTrackedCameraError {
+    None = openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_None as isize,
+    OperationFailed =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_OperationFailed as isize,
+    InvalidHandle = openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidHandle as isize,
+    InvalidFrameHeaderVersion =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidFrameHeaderVersion as isize,
+    OutOfHandles = openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_OutOfHandles as isize,
+    IPCFailure = openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_IPCFailure as isize,
+    NotSupportedForThisDevice =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_NotSupportedForThisDevice as isize,
+    SharedMemoryFailure =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_SharedMemoryFailure as isize,
+    FrameBufferingFailure =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_FrameBufferingFailure as isize,
+    StreamSetupFailure =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_StreamSetupFailure as isize,
+    InvalidGLTextureId =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidGLTextureId as isize,
+    InvalidSharedTextureHandle =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidSharedTextureHandle as isize,
+    FailedToGetGLTextureId =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_FailedToGetGLTextureId as isize,
+    SharedTextureFailure =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_SharedTextureFailure as isize,
+    NoFrameAvailable =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_NoFrameAvailable as isize,
+    InvalidArgument =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidArgument as isize,
+    InvalidFrameBufferSize =
+        openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidFrameBufferSize as isize,
+}
+impl From<openvr_sys::EVRTrackedCameraError> for VRTrackedCameraError {
+    fn from(value: openvr_sys::EVRTrackedCameraError) -> Self {
+        match value {
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_None => Self::None,
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_OperationFailed => {
+                Self::OperationFailed
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidHandle => {
+                Self::InvalidHandle
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidFrameHeaderVersion => {
+                Self::InvalidFrameHeaderVersion
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_OutOfHandles => {
+                Self::OutOfHandles
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_IPCFailure => Self::IPCFailure,
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_NotSupportedForThisDevice => {
+                Self::NotSupportedForThisDevice
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_SharedMemoryFailure => {
+                Self::SharedMemoryFailure
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_FrameBufferingFailure => {
+                Self::FrameBufferingFailure
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_StreamSetupFailure => {
+                Self::StreamSetupFailure
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidGLTextureId => {
+                Self::InvalidGLTextureId
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidSharedTextureHandle => {
+                Self::InvalidSharedTextureHandle
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_FailedToGetGLTextureId => {
+                Self::FailedToGetGLTextureId
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_SharedTextureFailure => {
+                Self::SharedTextureFailure
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_NoFrameAvailable => {
+                Self::NoFrameAvailable
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidArgument => {
+                Self::InvalidArgument
+            }
+            openvr_sys::EVRTrackedCameraError_VRTrackedCameraError_InvalidFrameBufferSize => {
+                Self::InvalidFrameBufferSize
+            }
+            _ => unreachable!(),
+        }
+    }
+}
+impl VRTrackedCameraError {
+    pub fn new(value: openvr_sys::EVRTrackedCameraError) -> Result<(), Self> {
+        let err = Self::from(value);
+        match err {
+            VRTrackedCameraError::None => return Ok(()),
+            _ => return Err(err),
+        }
+    }
+}
