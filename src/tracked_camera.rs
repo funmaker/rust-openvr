@@ -235,6 +235,32 @@ impl TrackedCamera {
         VRTrackedCameraError::new(error)
     }
 
+    /// Polls the current camera frame header without copying the frame buffer.
+    ///
+    /// Useful for checking whether a new frame is available before doing the more expensive full
+    /// frame-buffer copy.
+    pub fn get_video_stream_frame_header(
+        &self,
+        handle: TrackedCameraHandle,
+        frame_type: TrackedCameraFrameType,
+    ) -> Result<CameraVideoStreamFrameHeader, VRTrackedCameraError> {
+        let mut header = mem::MaybeUninit::uninit();
+
+        let error = unsafe {
+            self.0.GetVideoStreamFrameBuffer.unwrap()(
+                handle,
+                frame_type.into(),
+                std::ptr::null_mut(),
+                0,
+                header.as_mut_ptr(),
+                mem::size_of::<sys::CameraVideoStreamFrameHeader_t>() as u32,
+            )
+        };
+        VRTrackedCameraError::new(error)?;
+
+        Ok(unsafe { header.assume_init() }.into())
+    }
+
     /// Copies the latest camera frame into `buffer`.
     ///
     /// The image data is provided as RGBA data, with four bytes per pixel. If no frame is available

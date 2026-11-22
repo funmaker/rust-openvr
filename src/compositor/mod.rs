@@ -229,7 +229,7 @@ impl Compositor {
     /// SetExplicitTimingMode is true and the application calls PostPresentHandoff, then WaitGetPoses is guaranteed not
     /// to access the queue.  Note that PostPresentHandoff and SubmitExplicitTimingData will access the queue, so only
     /// WaitGetPoses becomes safe for accessing the queue from another thread.
-    pub fn set_explicit_timing_mode(&self, mode: bool) {
+    pub fn set_explicit_timing_mode(&self, mode: CompositorTimingMode) {
         unsafe { self.0.SetExplicitTimingMode.unwrap()(mode as sys::EVRCompositorTimingMode) }
     }
 
@@ -249,6 +249,19 @@ pub struct WaitPoses {
     pub render: TrackedDevicePoses,
     /// Predicted to the point they will be at the frame after the upcoming frame, for use in game logic.
     pub game: TrackedDevicePoses,
+}
+
+/// Frame timing mode for Vulkan/D3D12 applications.
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum CompositorTimingMode {
+    /// The compositor determines when the frame begins.
+    Implicit = sys::EVRCompositorTimingMode_VRCompositorTimingMode_Implicit as isize,
+    /// The application explicitly submits timing data and the runtime performs the post-present handoff.
+    ExplicitRuntimePerformsPostPresentHandoff =
+        sys::EVRCompositorTimingMode_VRCompositorTimingMode_Explicit_RuntimePerformsPostPresentHandoff as isize,
+    /// The application explicitly submits timing data and performs the post-present handoff itself.
+    ExplicitApplicationPerformsPostPresentHandoff =
+        sys::EVRCompositorTimingMode_VRCompositorTimingMode_Explicit_ApplicationPerformsPostPresentHandoff as isize,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]
