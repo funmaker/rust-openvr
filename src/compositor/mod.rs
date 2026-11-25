@@ -112,6 +112,7 @@ impl Compositor {
         use self::texture::Handle::*;
         let flags = match texture.handle {
             Vulkan(_) => sys::EVRSubmitFlags_Submit_Default,
+            VulkanArray(_) => sys::EVRSubmitFlags_Submit_VulkanTextureWithArrayData,
             OpenGLTexture(_) => sys::EVRSubmitFlags_Submit_Default,
             OpenGLRenderBuffer(_) => sys::EVRSubmitFlags_Submit_GlRenderBuffer,
             #[cfg(feature = "submit_d3d11")]
@@ -128,6 +129,7 @@ impl Compositor {
         let texture = sys::VRTextureWithPose_t_real {
             handle: match texture.handle {
                 Vulkan(ref x) => x as *const _ as *mut _,
+                VulkanArray(ref x) => x as *const _ as *mut _,
                 OpenGLTexture(x) => x as *mut _,
                 OpenGLRenderBuffer(x) => x as *mut _,
                 #[cfg(feature = "submit_d3d11")]
@@ -157,7 +159,7 @@ impl Compositor {
                 }
             },
             eType: match texture.handle {
-                Vulkan(_) => sys::ETextureType_TextureType_Vulkan,
+                Vulkan(_) | VulkanArray(_) => sys::ETextureType_TextureType_Vulkan,
                 OpenGLTexture(_) => sys::ETextureType_TextureType_OpenGL,
                 OpenGLRenderBuffer(_) => sys::ETextureType_TextureType_OpenGL,
                 #[cfg(feature = "submit_d3d11")]

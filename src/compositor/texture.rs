@@ -36,6 +36,20 @@ pub mod vulkan {
     }
     unsafe impl Send for Texture {}
     unsafe impl Sync for Texture {}
+
+    /// A layer of an array image (`VRVulkanTextureArrayData_t`).
+    #[repr(C)]
+    #[derive(Debug, Copy, Clone)]
+    pub struct TextureArray {
+        pub texture: Texture,
+        /// The layer to submit.
+        pub array_index: u32,
+        /// Number of layers of the image.
+        pub array_size: u32,
+    }
+
+    // VRVulkanTextureArrayData_t extends VRVulkanTextureData_t, its fields follow the base's (padded) size.
+    const _: () = assert!(core::mem::offset_of!(TextureArray, array_index) == core::mem::size_of::<Texture>());
 }
 
 #[cfg(feature = "submit_d3d12")]
@@ -53,6 +67,7 @@ pub mod d3d12 {
 #[derive(Debug, Copy, Clone)]
 pub enum Handle {
     Vulkan(vulkan::Texture),
+    VulkanArray(vulkan::TextureArray),
     OpenGLTexture(usize),
     OpenGLRenderBuffer(usize),
     #[cfg(feature = "submit_d3d11")]

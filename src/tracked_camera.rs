@@ -289,6 +289,39 @@ impl TrackedCamera {
         Ok(unsafe { header.assume_init() }.into())
     }
 
+    /// Gets a D3D11 shader resource view of the shared texture holding the latest camera frame.
+    ///
+    /// The runtime opens the shared texture on the device of `device_or_resource` (an `ID3D11Device` or an
+    /// `ID3D11Resource` on it) and caches the view, so the returned `ID3D11ShaderResourceView` is owned by the runtime
+    /// and must not be released. Unlike `get_video_stream_frame_buffer`, no copy is performed.
+    ///
+    /// # Safety
+    ///
+    /// `device_or_resource` must be a valid `ID3D11Device` or `ID3D11Resource` pointer.
+    pub unsafe fn get_video_stream_texture_d3d11(
+        &self,
+        handle: TrackedCameraHandle,
+        frame_type: TrackedCameraFrameType,
+        device_or_resource: *mut std::ffi::c_void,
+    ) -> Result<(*mut std::ffi::c_void, CameraVideoStreamFrameHeader), VRTrackedCameraError> {
+        let mut view = std::ptr::null_mut();
+        let mut header = mem::MaybeUninit::uninit();
+
+        let error = unsafe {
+            self.0.GetVideoStreamTextureD3D11.unwrap()(
+                handle,
+                frame_type.into(),
+                device_or_resource,
+                &mut view,
+                header.as_mut_ptr(),
+                mem::size_of::<sys::CameraVideoStreamFrameHeader_t>() as u32,
+            )
+        };
+        VRTrackedCameraError::new(error)?;
+
+        Ok((view, unsafe { header.assume_init() }.into()))
+    }
+
     /// Gets the size and texture bounds of a camera video stream texture.
     pub fn get_video_stream_texture_size(
         &self,

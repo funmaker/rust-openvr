@@ -367,45 +367,36 @@ impl System {
         device: TrackedDeviceIndex,
         property: TrackedDeviceProperty,
     ) -> Result<Box<[T]>, TrackedPropertyError> {
-        let mut error: mem::MaybeUninit<TrackedPropertyError> = mem::MaybeUninit::uninit();
+        const MAX_SIZE: usize = 1 << 20;
+        let mut result = vec![T::default(); (256 / size_of::<T>()).max(1)];
+        
+        // OpenVR doesn't report the required size of some array properties,
+        // so the buffer grows until the property fits.
+        loop {
+            let mut error: mem::MaybeUninit<TrackedPropertyError> = mem::MaybeUninit::uninit();
 
-        let size = unsafe {
-            self.0.GetArrayTrackedDeviceProperty.unwrap()(
-                device.0,
-                property.0,
-                T::TAG,
-                ptr::null_mut(),
-                0,
-                error.as_mut_ptr() as *mut sys::TrackedPropertyError,
-            )
-        };
+            let size = unsafe {
+                self.0.GetArrayTrackedDeviceProperty.unwrap()(
+                    device.0,
+                    property.0,
+                    T::TAG,
+                    result.as_mut_ptr() as *mut _,
+                    (result.len() * size_of::<T>()) as u32,
+                    error.as_mut_ptr() as *mut sys::TrackedPropertyError,
+                )
+            } as usize;
 
-        let error = unsafe { error.assume_init() };
-        if error != tracked_property_error::SUCCESS {
-            return Err(error);
-        }
-        
-        let elem_count = (size as usize).div_ceil(size_of::<T>());
-        let mut result = vec![T::default(); elem_count];
-        let mut error: mem::MaybeUninit<TrackedPropertyError> = mem::MaybeUninit::uninit();
-        
-        unsafe {
-            self.0.GetArrayTrackedDeviceProperty.unwrap()(
-                device.0,
-                property.0,
-                T::TAG,
-                result.as_mut_ptr() as *mut _,
-                (result.len() * size_of::<T>()) as u32,
-                error.as_mut_ptr() as *mut sys::TrackedPropertyError,
-            )
-        };
-        
-        let error = unsafe { error.assume_init() };
-        
-        if error == tracked_property_error::SUCCESS {
-            Ok(result.into_boxed_slice())
-        } else {
-            Err(error)
+            let error = unsafe { error.assume_init() };
+
+            if error == tracked_property_error::SUCCESS {
+                result.truncate(size / size_of::<T>());
+                return Ok(result.into_boxed_slice());
+            } else if error == tracked_property_error::BUFFER_TOO_SMALL && result.len() * size_of::<T>() < MAX_SIZE {
+                let len = (result.len() * 2).max(size.div_ceil(size_of::<T>()));
+                result.resize(len, T::default());
+            } else {
+                return Err(error);
+            }
         }
     }
 
